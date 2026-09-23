@@ -5,6 +5,7 @@ import { supabaseAdmin, supabaseServidor } from '@/lib/supabase';
 import { urlBase } from '@/lib/url';
 import { FormBarbearia } from '../../FormBarbearia';
 import { Usuarios, type UsuarioLinha } from './Usuarios';
+import { LinkQr } from './LinkQr';
 import { IEsquerda, IExterno, IPaleta } from '@/components/interno/Icones';
 import s from '@/components/interno/ui.module.css';
 
@@ -68,8 +69,11 @@ export default async function PaginaBarbearia({
       )}
 
       <h2 className={s.secaoTitulo} style={{ marginTop: 8 }}>
-        Dados
+        Link e QR Code
       </h2>
+      <LinkQr url={new URL(`/${b.slug}`, origem).toString()} slug={b.slug} />
+
+      <h2 className={s.secaoTitulo}>Dados</h2>
       <div className={s.card} style={{ maxWidth: 720 }}>
         <FormBarbearia
           id={b.id}
