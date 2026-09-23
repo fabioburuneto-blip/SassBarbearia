@@ -10,7 +10,7 @@ export default async function PaginaEquipe() {
   const { barbearia } = await exigirDono();
   const sb = await supabaseServidor();
   const [profissionais, disponibilidade, bloqueios] = await Promise.all([
-    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem').eq('barbearia_id', barbearia.id).order('ordem').order('nome'),
+    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem, comissao_percentual').eq('barbearia_id', barbearia.id).order('ordem').order('nome'),
     sb.from('disponibilidade').select('profissional_id, dia_semana').eq('barbearia_id', barbearia.id),
     sb
       .from('bloqueios')

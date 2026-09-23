@@ -39,16 +39,28 @@ export async function criarProfissional(nome: string, fotoUrl: string | null): P
   return { ok: true, id: data.id };
 }
 
-export async function atualizarProfissional(id: string, dados: { nome: string; foto_url: string | null; ativo: boolean }): Promise<Resultado> {
+export async function atualizarProfissional(
+  id: string,
+  dados: { nome: string; foto_url: string | null; ativo: boolean; comissao_percentual?: number },
+): Promise<Resultado> {
   const { barbearia } = await exigirDono();
   if (!UUID.test(id)) return { ok: false, erro: 'Profissional inválido.' };
   const n = dados.nome.trim();
   if (n.length < 2 || n.length > 80) return { ok: false, erro: 'Informe o nome (2 a 80 caracteres).' };
   if (!fotoValida(dados.foto_url, barbearia.id)) return { ok: false, erro: 'Foto inválida.' };
+  const comissao = dados.comissao_percentual;
+  if (comissao !== undefined && (Number.isNaN(comissao) || comissao < 0 || comissao > 100)) {
+    return { ok: false, erro: 'Comissão deve ser entre 0 e 100%.' };
+  }
   const sb = await supabaseServidor();
   const { data, error } = await sb
     .from('profissionais')
-    .update({ nome: n, foto_url: dados.foto_url, ativo: !!dados.ativo })
+    .update({
+      nome: n,
+      foto_url: dados.foto_url,
+      ativo: !!dados.ativo,
+      ...(comissao !== undefined ? { comissao_percentual: comissao } : {}),
+    })
     .eq('id', id)
     .eq('barbearia_id', barbearia.id)
     .select('id');

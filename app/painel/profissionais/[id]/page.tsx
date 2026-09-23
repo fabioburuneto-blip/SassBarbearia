@@ -23,7 +23,7 @@ export default async function PaginaProfissional({
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const sb = await supabaseServidor();
   const [prof, disp] = await Promise.all([
-    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem').eq('id', id).eq('barbearia_id', barbearia.id).maybeSingle(),
+    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem, comissao_percentual').eq('id', id).eq('barbearia_id', barbearia.id).maybeSingle(),
     sb.from('disponibilidade').select('dia_semana, hora_inicio, hora_fim').eq('profissional_id', id).order('dia_semana').order('hora_inicio'),
   ]);
   if (!prof.data) notFound();

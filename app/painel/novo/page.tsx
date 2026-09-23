@@ -18,7 +18,7 @@ export default async function PaginaNovo({ searchParams }: { searchParams: Promi
   const sb = await supabaseServidor();
   const [servicos, profissionais] = await Promise.all([
     sb.from('servicos').select('id, nome, descricao, preco, duracao_min, ativo, ordem').eq('barbearia_id', barbearia.id).eq('ativo', true).order('ordem').order('nome'),
-    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem').eq('barbearia_id', barbearia.id).eq('ativo', true).order('ordem').order('nome'),
+    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem, comissao_percentual').eq('barbearia_id', barbearia.id).eq('ativo', true).order('ordem').order('nome'),
   ]);
   const profs = (profissionais.data ?? []) as ProfissionalPainel[];
 

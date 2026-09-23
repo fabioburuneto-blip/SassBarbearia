@@ -37,7 +37,7 @@ export default async function PaginaAgenda({ searchParams }: { searchParams: Pro
 
   const [periodo, profissionais, doDia] = await Promise.all([
     consulta,
-    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem').eq('barbearia_id', barbearia.id).order('ordem').order('nome'),
+    sb.from('profissionais').select('id, nome, foto_url, ativo, ordem, comissao_percentual').eq('barbearia_id', barbearia.id).order('ordem').order('nome'),
     sb
       .from('agendamentos')
       .select(CAMPOS)

@@ -38,16 +38,22 @@ export function EditorProfissional({
   const [nome, setNome] = useState(profissional.nome);
   const [foto, setFoto] = useState<string | null>(profissional.foto_url);
   const [ativo, setAtivo] = useState(profissional.ativo);
+  const [comissao, setComissao] = useState(String(profissional.comissao_percentual));
   const [erroDados, setErroDados] = useState<string | null>(null);
   const [salvandoDados, iniciarDados] = useTransition();
 
-  function salvarDados(dados: { nome: string; foto_url: string | null; ativo: boolean }, texto = 'Dados salvos') {
+  function salvarDados(dados: { nome: string; foto_url: string | null; ativo: boolean; comissao_percentual?: number }, texto = 'Dados salvos') {
     setErroDados(null);
     iniciarDados(async () => {
       const r = await atualizarProfissional(profissional.id, dados);
       if (r.ok) mostrar(texto);
       else setErroDados(r.erro);
     });
+  }
+
+  function salvarComissao() {
+    const v = Number(comissao.replace(',', '.'));
+    salvarDados({ nome, foto_url: foto, ativo, comissao_percentual: v }, 'Comissão salva');
   }
 
   // ---- horários ----
@@ -139,6 +145,30 @@ export function EditorProfissional({
               salvarDados({ nome, foto_url: foto, ativo: v }, v ? 'Profissional ativado' : 'Profissional desativado');
             }}
           />
+        </div>
+        <div className={s.campo}>
+          <label htmlFor="comissao">Comissão</label>
+          <div className={s.linha} style={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+            <input
+              id="comissao"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={100}
+              step={0.5}
+              className={s.entrada}
+              style={{ maxWidth: 100 }}
+              value={comissao}
+              onChange={(ev) => setComissao(ev.target.value)}
+            />
+            <span className={s.fraco}>%</span>
+            {comissao !== String(profissional.comissao_percentual) && (
+              <button className={`${s.botao} ${s.primario}`} disabled={salvandoDados} onClick={salvarComissao}>
+                Salvar
+              </button>
+            )}
+          </div>
+          <span className={s.dica}>Percentual sobre o que este profissional atender, usado no Financeiro.</span>
         </div>
         {erroDados && <p className={s.alerta}>{erroDados}</p>}
       </section>

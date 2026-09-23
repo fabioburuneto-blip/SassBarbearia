@@ -162,6 +162,12 @@ export const IMonitor = (p: P) => (
     <path d="M8 20h8M12 16v4" />
   </Svg>
 );
+export const IMoeda = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7v10M14.8 9.3c0-1.3-1.2-2.1-2.8-2.1s-2.6.8-2.6 1.9c0 3 5.6 1.5 5.6 4.4 0 1.2-1.2 2-2.8 2s-2.9-.8-2.9-2.1" />
+  </Svg>
+);
 export const IImagem = (p: P) => (
   <Svg {...p}>
     <rect x="3.5" y="4.5" width="17" height="15" rx="2" />

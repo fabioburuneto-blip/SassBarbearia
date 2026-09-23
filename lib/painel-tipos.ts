@@ -15,7 +15,7 @@ export type AgendamentoPainel = {
   servico: { id: string; nome: string; duracao_min: number } | null;
 };
 
-export type ProfissionalPainel = { id: string; nome: string; foto_url: string | null; ativo: boolean; ordem: number };
+export type ProfissionalPainel = { id: string; nome: string; foto_url: string | null; ativo: boolean; ordem: number; comissao_percentual: number };
 
 export type ServicoPainel = {
   id: string;
