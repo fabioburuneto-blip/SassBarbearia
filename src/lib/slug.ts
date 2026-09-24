@@ -13,6 +13,7 @@ const RESERVED_SLUGS = new Set([
   "public",
   "assets",
   "static",
+  "preview",
 ]);
 
 /** Normalizes free text into a slug matching the businesses.slug DB constraint. */

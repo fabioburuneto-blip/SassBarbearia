@@ -86,6 +86,26 @@ Ver [`DATABASE.md`](./DATABASE.md#prevenção-de-overbooking) — um
 `EXCLUDE` constraint no Postgres, não apenas uma checagem "SELECT antes de
 INSERT" na aplicação (que teria uma race condition).
 
+## Página pública: nunca expor dados administrativos
+
+Além do RLS, a página pública (`/[slug]`, e a prévia autenticada em
+`/preview`) tem uma segunda camada de proteção contra vazamento de dados
+que o RLS sozinho não cobre: React Server Components serializam **todo**
+objeto passado para um Client Component no payload enviado ao navegador,
+campos não usados na tela incluídos. Passar a linha inteira de
+`businesses` (que inclui `owner_id`, `email`, `phone`, `is_published`)
+para o `BookingWidget` (um Client Component) vazaria esses campos no
+HTML/JS da página mesmo que nenhum deles apareça visualmente.
+
+Por isso `src/components/public/types.ts` define `PublicBusiness` — só os
+campos que uma página pública deveria mostrar (nome, slug, segmento,
+descrição, whatsapp, instagram, cidade, endereço, timezone, logo, capa) —
+e é esse tipo, nunca o `businesses` Row completo, que circula por todo o
+motor de renderização (`buildPublicPageData`, `PublicPage`,
+`ThemeRenderer`, cada seção). O `id` da empresa também não faz parte
+desse tipo: as queries em `[slug]/page.tsx` o buscam à parte, só para
+escopar as consultas seguintes no servidor, e nunca o repassam adiante.
+
 ## Storage
 
 O bucket `business-assets` é público para leitura (necessário para exibir

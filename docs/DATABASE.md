@@ -20,6 +20,14 @@ aplicadas nesta ordem (o prefixo numérico garante isso):
    `is_slug_available()`; `create_business()` estendida para aceitar esses
    campos opcionais (o overload anterior de 4 argumentos é removido antes
    de recriar a função, para não deixar duas versões ambíguas instaladas).
+8. `20250924140001_public_page_engine.sql` — troca `themes.font`/`layout`
+   (texto livre + 2 valores) por `preset` (5 valores fixos), `sections`
+   (jsonb, lista ordenada de blocos habilitados) e `gallery_urls`
+   (`text[]`), para sustentar o motor de páginas públicas.
+9. `20250924140002_reserve_preview_slug.sql` — adiciona `preview` à lista
+   de slugs reservados em `create_business()` (a prévia autenticada vive
+   em `/preview`, fora de `/dashboard`, para renderizar sem a barra
+   lateral do painel).
 
 Todas foram validadas rodando de fato contra um Postgres 16 local (schema
 `auth`/`storage` mínimos simulando o que o Supabase já fornece), incluindo
@@ -28,23 +36,23 @@ e prevenção de overbooking — não é só leitura de código.
 
 ## Entidades
 
-| Tabela                  | Descrição                                                                                |
-| ----------------------- | ---------------------------------------------------------------------------------------- |
-| `profiles`              | Espelho 1:1 de `auth.users`, criado automaticamente por trigger no signup.               |
+| Tabela                  | Descrição                                                                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`              | Espelho 1:1 de `auth.users`, criado automaticamente por trigger no signup.                                                             |
 | `businesses`            | Um tenant. `slug` único, `segment` (barbearia, salão, ...), `whatsapp`/`instagram`/`city`/`address` (todos opcionais), `is_published`. |
-| `business_settings`     | Config operacional 1:1 (janela de agendamento, antecedência mínima, intervalo de slots). |
-| `business_members`      | Quem pertence a qual empresa e com qual papel (`owner`/`staff`).                         |
-| `services`              | Serviços oferecidos, com duração e preço.                                                |
-| `professionals`         | Quem atende.                                                                             |
-| `professional_services` | N:N — quais serviços cada profissional realiza.                                          |
-| `business_hours`        | Horário de funcionamento semanal (1 linha por dia da semana).                            |
-| `professional_hours`    | Override opcional de horário por profissional (mesmo formato).                           |
-| `blocked_times`         | Bloqueios pontuais (férias, folga, feriado), por empresa ou por profissional.            |
-| `customers`             | Clientes, escopados por empresa (nunca compartilhados entre tenants).                    |
-| `appointments`          | Agendamentos. `status`: `pending`, `confirmed`, `cancelled`, `completed`, `no_show`.     |
-| `themes`                | Cores/layout da página pública.                                                          |
-| `notifications`         | Notificações internas do painel (ex: novo agendamento).                                  |
-| `subscriptions`         | Placeholder de billing (`plan`, `status`) para integrar um gateway depois.               |
+| `business_settings`     | Config operacional 1:1 (janela de agendamento, antecedência mínima, intervalo de slots).                                               |
+| `business_members`      | Quem pertence a qual empresa e com qual papel (`owner`/`staff`).                                                                       |
+| `services`              | Serviços oferecidos, com duração e preço.                                                                                              |
+| `professionals`         | Quem atende.                                                                                                                           |
+| `professional_services` | N:N — quais serviços cada profissional realiza.                                                                                        |
+| `business_hours`        | Horário de funcionamento semanal (1 linha por dia da semana).                                                                          |
+| `professional_hours`    | Override opcional de horário por profissional (mesmo formato).                                                                         |
+| `blocked_times`         | Bloqueios pontuais (férias, folga, feriado), por empresa ou por profissional.                                                          |
+| `customers`             | Clientes, escopados por empresa (nunca compartilhados entre tenants).                                                                  |
+| `appointments`          | Agendamentos. `status`: `pending`, `confirmed`, `cancelled`, `completed`, `no_show`.                                                   |
+| `themes`                | Configuração da página pública: `preset` (um dos 5 temas), cores, `sections` (blocos habilitados + ordem), `gallery_urls`.             |
+| `notifications`         | Notificações internas do painel (ex: novo agendamento).                                                                                |
+| `subscriptions`         | Placeholder de billing (`plan`, `status`) para integrar um gateway depois.                                                             |
 
 Todas usam UUID (`gen_random_uuid()`), têm `created_at`/`updated_at` (com
 trigger automática), e toda entidade pertencente a uma empresa tem
@@ -104,6 +112,18 @@ Todas em `public`, chamáveis via `supabase.rpc(...)`:
   ativos, profissional realiza o serviço, horário respeita antecedência
   mínima/janela máxima/bloqueios), cria ou atualiza o cliente por telefone,
   insere o agendamento e uma notificação interna.
+
+## `themes.sections`
+
+Lista jsonb ordenada — a ordem do array é a ordem de exibição na página
+pública. Cada item é `{"key": "...", "enabled": true|false}`, com `key`
+em `hero`, `about`, `services`, `team`, `gallery`, `booking`, `location`,
+`social`, `footer` (ver `src/lib/themes/sections.ts`, a mesma lista usada
+no app). Não há constraint de banco validando o conteúdo — quem grava
+(sempre `/dashboard/personalizacao`, nunca o cliente diretamente) já
+passa por `normalizeSections()` no servidor antes do `update`, que
+garante presença de cada chave conhecida exatamente uma vez e descarta
+chaves desconhecidas.
 
 ## Gerando tipos TypeScript
 

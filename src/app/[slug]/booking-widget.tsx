@@ -29,6 +29,7 @@ export function BookingWidget({
   professionals,
   servicesByProfessional,
   primaryColor,
+  previewMode,
 }: {
   businessSlug: string;
   timezone: string;
@@ -36,6 +37,10 @@ export function BookingWidget({
   professionals: Professional[];
   servicesByProfessional: Map<string, string[]>;
   primaryColor: string;
+  /** Lets the owner browse real availability without ever creating a real
+   * appointment -- get_available_slots() is read-only so it stays live;
+   * only the final submit is short-circuited. */
+  previewMode?: boolean;
 }) {
   const [serviceId, setServiceId] = useState("");
   const [professionalId, setProfessionalId] = useState("");
@@ -210,6 +215,7 @@ export function BookingWidget({
             error={error}
             setError={setError}
             onSuccess={() => setConfirmed(selectedSlot)}
+            previewMode={previewMode}
           />
         )}
       </div>
@@ -227,6 +233,7 @@ function BookingDetailsForm({
   error,
   setError,
   onSuccess,
+  previewMode,
 }: {
   businessSlug: string;
   serviceId: string;
@@ -237,9 +244,17 @@ function BookingDetailsForm({
   error: string | null;
   setError: (v: string | null) => void;
   onSuccess: () => void;
+  previewMode?: boolean;
 }) {
   async function handleSubmit(formData: FormData) {
     setError(null);
+
+    if (previewMode) {
+      setError(
+        "Modo de prévia: o agendamento não é salvo de verdade aqui. Publique a página para receber agendamentos reais.",
+      );
+      return;
+    }
 
     const parsed = publicBookingSchema.safeParse({
       service_id: serviceId,
@@ -315,7 +330,11 @@ function BookingDetailsForm({
       <FieldError message={error ?? undefined} />
 
       <Button type="submit" disabled={submitting} className="w-full">
-        {submitting ? "Confirmando..." : "Confirmar agendamento"}
+        {submitting
+          ? "Confirmando..."
+          : previewMode
+            ? "Confirmar agendamento (prévia)"
+            : "Confirmar agendamento"}
       </Button>
     </form>
   );

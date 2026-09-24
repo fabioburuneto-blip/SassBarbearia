@@ -6,6 +6,6 @@ export const navLinks = [
   { href: "/dashboard/customers", label: "Clientes" },
   { href: "/dashboard/hours", label: "Horários" },
   { href: "/dashboard/blocked-times", label: "Bloqueios" },
-  { href: "/dashboard/customization", label: "Personalização" },
+  { href: "/dashboard/personalizacao", label: "Personalização" },
   { href: "/dashboard/settings", label: "Configurações" },
 ] as const;

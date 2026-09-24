@@ -58,7 +58,9 @@ Abra [http://localhost:3000](http://localhost:3000).
 - `/onboarding` — wizard de 9 passos para criar a empresa (primeiro acesso)
 - `/dashboard` — painel do empresário (agenda, serviços, profissionais,
   clientes, horários, bloqueios, personalização, configurações)
-- `/{slug-da-empresa}` — página pública de agendamento de cada empresa
+- `/preview` — prévia autenticada da página pública (antes de publicar)
+- `/{slug-da-empresa}` — página pública de cada empresa: capa, sobre,
+  serviços, equipe, galeria, agendamento, localização, redes sociais
 
 ## Scripts
 

@@ -27,11 +27,24 @@ src/app/
 │   ├── customers/               # CRUD de clientes
 │   ├── hours/                    # horário de funcionamento (semanal)
 │   ├── blocked-times/             # bloqueios/folgas
-│   ├── customization/              # logo, capa, cores, layout
-│   └── settings/                    # dados da empresa, publicação
+│   ├── personalizacao/             # logo, capa, galeria, tema, seções (ver abaixo)
+│   └── settings/                    # dados administrativos, publicação
+├── preview/                  # prévia autenticada da página pública (sem sidebar)
 └── [slug]/
-    ├── page.tsx               # página pública (dados via RLS pública)
+    ├── page.tsx               # página pública real (dados via RLS pública)
     └── booking-widget.tsx     # fluxo de agendamento (client component)
+
+src/components/public/        # motor de renderização da página pública
+├── public-page.tsx            # entrada: fontes + banner de prévia + ThemeRenderer
+├── theme-renderer.tsx          # aplica preset/cores, itera as seções habilitadas
+├── section-heading.tsx
+├── types.ts                     # PublicBusiness (campos públicos), PublicPageData
+└── sections/                     # um componente por bloco (hero, about, services, ...)
+
+src/lib/themes/                # dados que o motor consome
+├── presets.ts                  # 5 presets (tipografia, raio, cards, botões, hero)
+├── fonts.ts                     # next/font/google, uma vez, para todos os presets
+└── sections.ts                   # registro de blocos + normalize/toggle/move
 ```
 
 ## Por que não há `/[slug]` nas rotas do dashboard
@@ -73,11 +86,11 @@ Supabase Auth (email + senha, com confirmação por email). O fluxo:
 3. `/onboarding` é um wizard de 9 passos (`onboarding-wizard.tsx` orquestra
    o estado; cada passo é um componente em `steps/`):
    1. Nome da empresa · 2. Segmento · 3. WhatsApp (opcional) ·
-   4. Instagram (opcional) · 5. Cidade/endereço (opcional) ·
-   6. Slug público (sugerido a partir do nome, checado ao vivo via
-   `is_slug_available()`) · 7. Tema inicial (presets de cor) ·
-   8. Primeiros serviços (opcional) · 9. Horário de funcionamento
-   (pré-preenchido com um padrão razoável).
+   2. Instagram (opcional) · 5. Cidade/endereço (opcional) ·
+   3. Slug público (sugerido a partir do nome, checado ao vivo via
+      `is_slug_available()`) · 7. Tema inicial (presets de cor) ·
+   4. Primeiros serviços (opcional) · 9. Horário de funcionamento
+      (pré-preenchido com um padrão razoável).
    - Os passos 1–5 só existem em estado local do React — nada é gravado
      até o passo 6 ser confirmado.
    - Confirmar o passo 6 chama `createBusinessAction()`, que é o único
@@ -88,7 +101,7 @@ Supabase Auth (email + senha, com confirmação por email). O fluxo:
      as mesmas server actions do dashboard** (`updateTheme`,
      `createService`, `saveBusinessHours`) em vez de duplicar lógica —
      tudo que é configurado ali já aparece depois em
-     `/dashboard/customization`, `/dashboard/services` e
+     `/dashboard/personalizacao`, `/dashboard/services` e
      `/dashboard/hours`.
    - Não há como voltar do passo 7 para os passos 1–6: a empresa já foi
      criada, então "voltar" ali reabriria o formulário de criação e
@@ -107,16 +120,64 @@ Supabase Auth (email + senha, com confirmação por email). O fluxo:
 - Autenticado com empresa → `/onboarding` redireciona direto para
   `/dashboard` (não é possível reabrir o wizard de criação).
 
-## Página pública e agendamento
+## Motor de páginas públicas
 
-A página `/[slug]` só lê dados via as policies públicas do RLS (empresa
-publicada, serviços/profissionais ativos, tema, horários). O widget de
-agendamento chama diretamente, do navegador, as RPCs públicas
-`get_available_slots` e `create_public_appointment` — ambas
-`SECURITY DEFINER`, então todo o negócio (validar que o serviço pertence à
-empresa do slug, respeitar horários/bloqueios/antecedência mínima, impedir
-overbooking) é resolvido no Postgres, nunca confiando em nada que o cliente
-tenha enviado além do slug + ids escolhidos na UI.
+Cada empresa tem uma página própria, mas **não existe um componente de
+página por cliente** — todas passam pelo mesmo motor, configurado por
+dados guardados em `themes` (preset, cores, seções habilitadas/ordem,
+galeria) e nos campos públicos de `businesses`.
+
+- **`ThemeRenderer`** (`src/components/public/theme-renderer.tsx`) lê
+  `theme.preset` (um dos 5 em `src/lib/themes/presets.ts`: Premium,
+  Moderno, Minimalista, Barbearia, Elegante — cada um com sua tipografia,
+  espaçamento, estilo de card/botão, raio de borda e composição de hero) e
+  a lista ordenada `theme.sections`, e despacha cada seção habilitada, na
+  ordem configurada, para o componente correspondente em
+  `src/components/public/sections/`: `HeroSection`, `AboutSection`,
+  `ServicesSection`, `TeamSection`, `GallerySection`, `BookingCTA`,
+  `LocationSection`, `SocialSection`, `FooterSection`. `hero` e `footer`
+  são sempre exibidas; as demais podem ser desligadas ou reordenadas em
+  `/dashboard/personalizacao`.
+- **`PublicPage`** é a entrada compartilhada: carrega as fontes de todos
+  os presets uma única vez (`next/font/google`, ver `src/lib/themes/fonts.ts`
+  — precisa de imports estáticos, então todo preset carrega junto; cada
+  um só referencia sua própria variável CSS) e envolve o `ThemeRenderer`.
+  É usada tanto por `/[slug]` (página real) quanto por `/preview`
+  (prévia autenticada) — o mesmo componente, os mesmos dados, então a
+  prévia nunca diverge do que vai para o ar.
+- **`buildPublicPageData`** (`src/lib/public-page-data.ts`) monta o payload
+  (`business`, `theme` normalizado, `services`, `professionals`) a partir
+  de um `business_id` já resolvido, reaproveitado por `/[slug]` (que filtra
+  `is_published = true` e só seleciona colunas públicas) e por `/preview`
+  (que ignora `is_published`, já que é o próprio dono vendo o rascunho).
+- **`PublicBusiness`** (`src/components/public/types.ts`) é o único
+  formato de empresa que entra nesses componentes — nunca o `businesses`
+  Row inteiro. Isso importa porque Server Components serializam qualquer
+  objeto passado para um Client Component (como `BookingWidget`) no
+  payload da página, campos não usados incluídos; sem esse recorte,
+  `owner_id`, `email`, `phone` e `is_published` vazariam para o HTML/JS
+  entregue ao navegador mesmo sem aparecer na tela.
+- **Cores** (`primary_color`/`secondary_color`) são independentes do
+  preset: viram variáveis CSS (`--brand-primary`/`--brand-secondary`) no
+  wrapper do `ThemeRenderer`, e cada preset expõe `bodyAccentVar` para
+  dizer qual das duas usar em elementos de destaque fora do hero (o preset
+  Barbearia, com fundo escuro em toda a página, aponta para a cor
+  secundária — usar sempre a primária faria botões escuros
+  desaparecerem contra um fundo também escuro).
+- **Agendamento**: o widget de agendamento chama diretamente, do
+  navegador, as RPCs públicas `get_available_slots` e
+  `create_public_appointment` — ambas `SECURITY DEFINER`, então todo o
+  negócio (validar que o serviço pertence à empresa do slug, respeitar
+  horários/bloqueios/antecedência mínima, impedir overbooking) é resolvido
+  no Postgres, nunca confiando em nada que o cliente tenha enviado além do
+  slug + ids escolhidos na UI. Em `/preview`, o mesmo `BookingWidget` roda
+  com `previewMode`: a busca de horários continua real (é só leitura),
+  mas o envio final é interceptado antes de chamar
+  `create_public_appointment`, então uma prévia nunca cria um agendamento
+  de verdade.
+- **SEO**: `generateMetadata` em `/[slug]/page.tsx` gera `title`,
+  `description` e Open Graph/Twitter Card a partir do nome, descrição e
+  capa/logo da empresa.
 
 ## Multi-tenant, hoje e amanhã
 

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValidSlug } from "@/lib/slug";
+import { THEME_PRESETS } from "@/lib/themes/presets";
 
 export const businessSegments = [
   "barbershop",
@@ -139,12 +140,32 @@ export const themeSchema = z.object({
   secondary_color: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Use um código hexadecimal, ex: #6366f1"),
-  layout: z.enum(["classic", "minimal"]),
+  preset: z.enum(THEME_PRESETS),
 });
 
 export const businessImageSchema = z.object({
-  kind: z.enum(["logo", "cover"]),
+  kind: z.enum(["logo", "cover", "gallery"]),
   url: z.string().trim().url(),
+});
+
+/** Everything editable from /dashboard/personalizacao besides colors/theme/
+ * images (those have their own dedicated actions). Reuses the same
+ * whatsapp/instagram/location rules as the onboarding wizard. */
+export const personalizationSchema = z.object({
+  name: z.string().trim().min(2, "Informe o nome da empresa").max(120),
+  description: optionalText(500),
+  whatsapp: optionalText(30).refine(
+    (v) => !v || v.replace(/\D/g, "").length >= 10,
+    "Informe um WhatsApp válido com DDD",
+  ),
+  instagram: optionalText(60)
+    .transform((v) => v?.replace(/^@/, ""))
+    .refine(
+      (v) => !v || /^[a-zA-Z0-9._]{1,30}$/.test(v),
+      "Use apenas o @usuario, sem espaços",
+    ),
+  city: optionalText(120),
+  address: optionalText(200),
 });
 
 export const publicBookingSchema = z.object({

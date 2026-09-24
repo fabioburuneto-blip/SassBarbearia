@@ -26,8 +26,6 @@ export type MemberRole = "owner" | "staff";
 export type AppointmentStatus =
   "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 
-export type ThemeLayout = "classic" | "minimal";
-
 export type SubscriptionPlan = "free" | "basic" | "pro";
 export type SubscriptionStatus =
   "active" | "trialing" | "past_due" | "canceled";
@@ -332,8 +330,10 @@ export interface Database {
           business_id: string;
           primary_color: string;
           secondary_color: string;
-          font: string;
-          layout: ThemeLayout;
+          preset: string;
+          /** Raw jsonb -- parse with normalizeSections() before use. */
+          sections: unknown;
+          gallery_urls: string[];
           created_at: string;
           updated_at: string;
         };
@@ -341,7 +341,11 @@ export interface Database {
         Update: Partial<
           Pick<
             Database["public"]["Tables"]["themes"]["Row"],
-            "primary_color" | "secondary_color" | "font" | "layout"
+            | "primary_color"
+            | "secondary_color"
+            | "preset"
+            | "sections"
+            | "gallery_urls"
           >
         >;
         Relationships: [];
