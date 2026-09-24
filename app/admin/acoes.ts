@@ -162,3 +162,51 @@ export async function criarUsuario(
   revalidatePath(`/admin/barbearias/${barbeariaId}`);
   return { ok: true, mensagem: `Usuário ${email} criado` };
 }
+
+function senhaProvisoria(): string {
+  return `Aureon-${Math.random().toString(36).slice(2, 8)}${Math.floor(Math.random() * 10)}!`;
+}
+
+/** Cria a barbearia e o usuário do dono a partir de um pedido de /comecar, num clique só. */
+export async function aprovarSolicitacao(
+  id: string,
+  ajustes: { nome: string; slug: string; whatsapp: string },
+): Promise<Resultado & { barbeariaId?: string; email?: string; senha?: string }> {
+  await exigirSuperadmin();
+  if (!UUID.test(id)) return { ok: false, erro: 'Solicitação inválida.' };
+  const sb = await supabaseServidor();
+  const { data: pedido } = await sb.from('solicitacoes_cadastro').select('id, email, status').eq('id', id).maybeSingle();
+  if (!pedido) return { ok: false, erro: 'Solicitação não encontrada.' };
+  if (pedido.status !== 'pendente') return { ok: false, erro: 'Essa solicitação já foi tratada.' };
+
+  const v = limpar({ ...ajustes, endereco: '', cidade: '', instagram: '', dominio_proprio: '' });
+  const erro = validarDados(v);
+  if (erro) return { ok: false, erro };
+
+  const { data: barbearia, error: erroBarbearia } = await sb.from('barbearias').insert(v).select('id').single();
+  if (erroBarbearia || !barbearia) {
+    return { ok: false, erro: erroBarbearia?.code === '23505' ? mensagemDuplicado(erroBarbearia) : 'Não foi possível criar a barbearia.' };
+  }
+
+  const senha = senhaProvisoria();
+  const rUsuario = await criarUsuario(barbearia.id, { nome: ajustes.nome, email: pedido.email, senha, papel: 'dono' });
+  if (!rUsuario.ok) {
+    await sb.from('barbearias').delete().eq('id', barbearia.id); // não deixa barbearia órfã sem dono
+    return { ok: false, erro: rUsuario.erro };
+  }
+
+  await sb.from('solicitacoes_cadastro').update({ status: 'aprovada' }).eq('id', id);
+  revalidatePath('/admin/solicitacoes');
+  revalidatePath('/admin');
+  return { ok: true, barbeariaId: barbearia.id, email: pedido.email, senha };
+}
+
+export async function recusarSolicitacao(id: string): Promise<Resultado> {
+  await exigirSuperadmin();
+  if (!UUID.test(id)) return { ok: false, erro: 'Solicitação inválida.' };
+  const sb = await supabaseServidor();
+  const { error } = await sb.from('solicitacoes_cadastro').update({ status: 'recusada' }).eq('id', id).eq('status', 'pendente');
+  if (error) return { ok: false, erro: 'Não foi possível recusar.' };
+  revalidatePath('/admin/solicitacoes');
+  return { ok: true };
+}

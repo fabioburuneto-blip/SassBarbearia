@@ -2,7 +2,7 @@
 
 export const SLUGS_RESERVADOS = [
   'entrar', 'sair', 'login', 'logout', 'painel', 'admin', 'api', 'auth',
-  'app', 'www', 'static', 'public', 'assets', 'demo-admin', 'suporte', 'ajuda',
+  'app', 'www', 'static', 'public', 'assets', 'demo-admin', 'suporte', 'ajuda', 'comecar',
 ];
 
 export function slugificar(texto: string): string {
