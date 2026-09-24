@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { saveBusinessHours, type HoursFormState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input, FieldError } from "@/components/ui/input";
@@ -11,13 +11,25 @@ type BusinessHour = Database["public"]["Tables"]["business_hours"]["Row"];
 
 export function HoursForm({
   hoursByDay,
+  submitLabel = "Salvar horários",
+  onSaved,
 }: {
   hoursByDay: Map<number, BusinessHour>;
+  submitLabel?: string;
+  onSaved?: () => void;
 }) {
   const [state, formAction, pending] = useActionState<HoursFormState, FormData>(
     saveBusinessHours,
     undefined,
   );
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (wasPending.current && !pending && state?.success) {
+      onSaved?.();
+    }
+    wasPending.current = pending;
+  }, [pending, state, onSaved]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -62,7 +74,7 @@ export function HoursForm({
       )}
 
       <Button type="submit" disabled={pending} className="self-start">
-        {pending ? "Salvando..." : "Salvar horários"}
+        {pending ? "Salvando..." : submitLabel}
       </Button>
     </form>
   );

@@ -13,9 +13,11 @@ O produto tem três áreas, todas servidas pelo mesmo app Next.js (App Router):
 ```
 src/app/
 ├── page.tsx                 # site institucional
-├── login/ signup/           # autenticação (Supabase Auth)
+├── login/ criar-conta/      # autenticação (Supabase Auth)
 ├── auth/confirm/route.ts    # callback de confirmação de email
-├── onboarding/               # criação da empresa (primeiro acesso)
+├── onboarding/               # wizard de criação da empresa (9 passos)
+│   ├── onboarding-wizard.tsx  # orquestra o estado do wizard
+│   └── steps/                  # um componente por passo
 ├── dashboard/
 │   ├── layout.tsx            # resolve a empresa do usuário logado, sidebar
 │   ├── page.tsx               # visão geral
@@ -61,17 +63,49 @@ quebrar nada, já que o schema já suporta N:N entre `profiles` e
 - **Row Level Security** é a fonte de verdade final para isolamento entre
   tenants — veja [`SECURITY.md`](./SECURITY.md).
 
-## Autenticação
+## Autenticação e onboarding
 
 Supabase Auth (email + senha, com confirmação por email). O fluxo:
 
-1. `/signup` → `supabase.auth.signUp()` → email de confirmação.
+1. `/criar-conta` → `supabase.auth.signUp()` → email de confirmação.
 2. Link do email → `/auth/confirm` (Route Handler) → `verifyOtp()` → sessão
    criada → redireciona para `/onboarding`.
-3. `/onboarding` → RPC `create_business()` cria a empresa, o vínculo de
-   owner, as configurações e o tema padrão numa única transação.
+3. `/onboarding` é um wizard de 9 passos (`onboarding-wizard.tsx` orquestra
+   o estado; cada passo é um componente em `steps/`):
+   1. Nome da empresa · 2. Segmento · 3. WhatsApp (opcional) ·
+   4. Instagram (opcional) · 5. Cidade/endereço (opcional) ·
+   6. Slug público (sugerido a partir do nome, checado ao vivo via
+   `is_slug_available()`) · 7. Tema inicial (presets de cor) ·
+   8. Primeiros serviços (opcional) · 9. Horário de funcionamento
+   (pré-preenchido com um padrão razoável).
+   - Os passos 1–5 só existem em estado local do React — nada é gravado
+     até o passo 6 ser confirmado.
+   - Confirmar o passo 6 chama `createBusinessAction()`, que é o único
+     lugar que invoca a RPC `create_business()` — cria a empresa, o
+     vínculo de owner, as configurações, o tema e a assinatura padrão numa
+     única transação.
+   - Os passos 7–9 já operam sobre a empresa recém-criada e **reutilizam
+     as mesmas server actions do dashboard** (`updateTheme`,
+     `createService`, `saveBusinessHours`) em vez de duplicar lógica —
+     tudo que é configurado ali já aparece depois em
+     `/dashboard/customization`, `/dashboard/services` e
+     `/dashboard/hours`.
+   - Não há como voltar do passo 7 para os passos 1–6: a empresa já foi
+     criada, então "voltar" ali reabriria o formulário de criação e
+     poderia disparar uma segunda chamada a `create_business()`.
+   - Ao final, uma tela de sucesso mostra o link público, com atalhos
+     para ver a página, ir ao painel ou copiar o link.
 4. `src/proxy.ts` (Next.js 16 renomeou `middleware.ts` → `proxy.ts`) mantém
    a sessão viva em toda navegação.
+
+### Guarda de rotas
+
+- Não autenticado → `/dashboard` e `/onboarding` redirecionam para
+  `/login` (`requireUser()` em `src/lib/auth.ts`).
+- Autenticado sem empresa → `/dashboard` redireciona para `/onboarding`
+  (`getCurrentBusiness()`); e `/onboarding` fica acessível normalmente.
+- Autenticado com empresa → `/onboarding` redireciona direto para
+  `/dashboard` (não é possível reabrir o wizard de criação).
 
 ## Página pública e agendamento
 

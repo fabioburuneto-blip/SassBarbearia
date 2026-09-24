@@ -54,8 +54,8 @@ npm run dev
 Abra [http://localhost:3000](http://localhost:3000).
 
 - `/` — site institucional
-- `/signup`, `/login` — cadastro e login do empresário
-- `/onboarding` — criação da empresa (primeiro acesso)
+- `/criar-conta`, `/login` — cadastro e login do empresário
+- `/onboarding` — wizard de 9 passos para criar a empresa (primeiro acesso)
 - `/dashboard` — painel do empresário (agenda, serviços, profissionais,
   clientes, horários, bloqueios, personalização, configurações)
 - `/{slug-da-empresa}` — página pública de agendamento de cada empresa

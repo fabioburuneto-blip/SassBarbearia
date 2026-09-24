@@ -3,6 +3,10 @@ import {
   createBusinessSchema,
   serviceSchema,
   publicBookingSchema,
+  onboardingWhatsappSchema,
+  onboardingInstagramSchema,
+  onboardingLocationSchema,
+  onboardingSlugSchema,
 } from "./validations";
 
 describe("createBusinessSchema", () => {
@@ -83,5 +87,68 @@ describe("publicBookingSchema", () => {
       customer_phone: "11999999999",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("onboardingWhatsappSchema", () => {
+  it("is optional", () => {
+    expect(onboardingWhatsappSchema.safeParse({ whatsapp: "" }).success).toBe(
+      true,
+    );
+    expect(onboardingWhatsappSchema.safeParse({}).success).toBe(true);
+  });
+
+  it("rejects a number that is too short", () => {
+    expect(
+      onboardingWhatsappSchema.safeParse({ whatsapp: "123" }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a formatted Brazilian phone number", () => {
+    expect(
+      onboardingWhatsappSchema.safeParse({ whatsapp: "(11) 99999-9999" })
+        .success,
+    ).toBe(true);
+  });
+});
+
+describe("onboardingInstagramSchema", () => {
+  it("strips a leading @", () => {
+    const result = onboardingInstagramSchema.safeParse({
+      instagram: "@barbearia.dom",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.instagram).toBe("barbearia.dom");
+    }
+  });
+
+  it("rejects handles with spaces", () => {
+    expect(
+      onboardingInstagramSchema.safeParse({ instagram: "barbearia dom" })
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("onboardingLocationSchema", () => {
+  it("allows both fields to be empty", () => {
+    expect(
+      onboardingLocationSchema.safeParse({ city: "", address: "" }).success,
+    ).toBe(true);
+  });
+});
+
+describe("onboardingSlugSchema", () => {
+  it("rejects a reserved slug", () => {
+    expect(
+      onboardingSlugSchema.safeParse({ slug: "criar-conta" }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a normal slug", () => {
+    expect(
+      onboardingSlugSchema.safeParse({ slug: "barbearia-dom" }).success,
+    ).toBe(true);
   });
 });

@@ -57,7 +57,8 @@ psql "$(supabase status -o env | grep DB_URL | cut -d= -f2)" \
   -f supabase/migrations/20250924120003_membership_functions.sql \
   -f supabase/migrations/20250924120004_rls.sql \
   -f supabase/migrations/20250924120005_functions.sql \
-  -f supabase/migrations/20250924120006_storage.sql
+  -f supabase/migrations/20250924120006_storage.sql \
+  -f supabase/migrations/20250924130001_onboarding_fields.sql
 ```
 
 Ou cole o conteúdo de cada arquivo, na mesma ordem numérica, no
@@ -79,7 +80,7 @@ npm run dev
 ```
 
 Acesse [http://localhost:3000](http://localhost:3000), crie uma conta em
-`/signup`, confirme o email (verifique o link no email enviado pelo
+`/criar-conta`, confirme o email (verifique o link no email enviado pelo
 Supabase) e conclua o onboarding em `/onboarding`.
 
 ## 7. Testes e qualidade

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { OnboardingForm } from "./onboarding-form";
+import { OnboardingWizard } from "./onboarding-wizard";
 
 export default async function OnboardingPage() {
   const { supabase, user } = await requireUser();
@@ -17,8 +17,8 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-16">
-      <OnboardingForm />
+    <div className="flex flex-1 items-start justify-center bg-zinc-50 px-4 py-10 sm:items-center sm:py-16">
+      <OnboardingWizard />
     </div>
   );
 }

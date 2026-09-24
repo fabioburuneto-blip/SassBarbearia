@@ -15,6 +15,11 @@ aplicadas nesta ordem (o prefixo numérico garante isso):
    `create_public_appointment()`.
 6. `20250924120006_storage.sql` — bucket público `business-assets` (logo/
    capa) e suas policies.
+7. `20250924130001_onboarding_fields.sql` — colunas `whatsapp`,
+   `instagram`, `city`, `address` em `businesses`; função
+   `is_slug_available()`; `create_business()` estendida para aceitar esses
+   campos opcionais (o overload anterior de 4 argumentos é removido antes
+   de recriar a função, para não deixar duas versões ambíguas instaladas).
 
 Todas foram validadas rodando de fato contra um Postgres 16 local (schema
 `auth`/`storage` mínimos simulando o que o Supabase já fornece), incluindo
@@ -26,7 +31,7 @@ e prevenção de overbooking — não é só leitura de código.
 | Tabela                  | Descrição                                                                                |
 | ----------------------- | ---------------------------------------------------------------------------------------- |
 | `profiles`              | Espelho 1:1 de `auth.users`, criado automaticamente por trigger no signup.               |
-| `businesses`            | Um tenant. `slug` único, `segment` (barbearia, salão, ...), `is_published`.              |
+| `businesses`            | Um tenant. `slug` único, `segment` (barbearia, salão, ...), `whatsapp`/`instagram`/`city`/`address` (todos opcionais), `is_published`. |
 | `business_settings`     | Config operacional 1:1 (janela de agendamento, antecedência mínima, intervalo de slots). |
 | `business_members`      | Quem pertence a qual empresa e com qual papel (`owner`/`staff`).                         |
 | `services`              | Serviços oferecidos, com duração e preço.                                                |
@@ -71,13 +76,22 @@ amigável ("slot is no longer available").
 
 Todas em `public`, chamáveis via `supabase.rpc(...)`:
 
-- **`create_business(p_name, p_slug, p_segment, p_timezone)`** —
-  `SECURITY DEFINER`. Único caminho para criar uma empresa: cria o registro
-  em `businesses`, o vínculo de `owner` em `business_members`, e as linhas
-  padrão de `business_settings`, `themes` e `subscriptions`, tudo em uma
-  transação. Valida formato de slug, slugs reservados (`login`, `dashboard`,
-  etc. — para não colidir com rotas do app) e segmento no próprio banco,
-  além da validação client-side.
+- **`create_business(p_name, p_slug, p_segment, p_timezone, p_whatsapp, p_instagram, p_city, p_address)`**
+  — `SECURITY DEFINER`. Único caminho para criar uma empresa: cria o
+  registro em `businesses` (com os campos opcionais de contato/localização
+  coletados no onboarding), o vínculo de `owner` em `business_members`, e
+  as linhas padrão de `business_settings`, `themes` e `subscriptions`,
+  tudo em uma transação. Valida formato de slug, slugs reservados
+  (`login`, `dashboard`, `criar-conta`, etc. — para não colidir com rotas
+  do app) e segmento no próprio banco, além da validação client-side. Os 4
+  últimos parâmetros são opcionais (default `null`), então o mesmo
+  `p_name, p_slug, p_segment, p_timezone` de antes continua funcionando.
+- **`is_slug_available(p_slug)`** — `SECURITY DEFINER`, chamável por
+  `anon`. Checa se um slug já está em uso, direto no banco, ignorando o
+  RLS de `businesses` (que esconderia empresas não publicadas de um select
+  comum e faria a checagem mentir sobre disponibilidade). Usada pelo
+  wizard de onboarding para validar o passo do slug antes de confirmar a
+  criação.
 - **`get_available_slots(p_business_slug, p_service_id, p_professional_id, p_date)`**
   — `SECURITY DEFINER`, chamável por `anon`. Calcula os horários
   disponíveis considerando `professional_hours` (com fallback para

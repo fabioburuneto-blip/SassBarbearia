@@ -24,6 +24,52 @@ export const segmentLabels: Record<(typeof businessSegments)[number], string> =
     other: "Outro",
   };
 
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : undefined));
+
+export const onboardingNameSchema = z.object({
+  name: z.string().trim().min(2, "Informe o nome da empresa").max(120),
+});
+
+export const onboardingSegmentSchema = z.object({
+  segment: z.enum(businessSegments, { message: "Selecione um segmento" }),
+});
+
+export const onboardingWhatsappSchema = z.object({
+  whatsapp: optionalText(30).refine(
+    (v) => !v || v.replace(/\D/g, "").length >= 10,
+    "Informe um WhatsApp válido com DDD",
+  ),
+});
+
+export const onboardingInstagramSchema = z.object({
+  instagram: optionalText(60)
+    .transform((v) => v?.replace(/^@/, ""))
+    .refine(
+      (v) => !v || /^[a-zA-Z0-9._]{1,30}$/.test(v),
+      "Use apenas o @usuario, sem espaços",
+    ),
+});
+
+export const onboardingLocationSchema = z.object({
+  city: optionalText(120),
+  address: optionalText(200),
+});
+
+export const onboardingSlugSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .refine(isValidSlug, "Use apenas letras minúsculas, números e hífens"),
+});
+
 export const createBusinessSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome da empresa").max(120),
   slug: z
@@ -33,6 +79,10 @@ export const createBusinessSchema = z.object({
     .refine(isValidSlug, "Use apenas letras minúsculas, números e hífens"),
   segment: z.enum(businessSegments),
   timezone: z.string().default("America/Sao_Paulo"),
+  whatsapp: optionalText(30),
+  instagram: optionalText(60).transform((v) => v?.replace(/^@/, "")),
+  city: optionalText(120),
+  address: optionalText(200),
 });
 
 export const serviceSchema = z.object({

@@ -60,6 +60,10 @@ export interface Database {
           description: string | null;
           phone: string | null;
           email: string | null;
+          whatsapp: string | null;
+          instagram: string | null;
+          city: string | null;
+          address: string | null;
           timezone: string;
           logo_url: string | null;
           cover_url: string | null;
@@ -75,6 +79,10 @@ export interface Database {
             | "description"
             | "phone"
             | "email"
+            | "whatsapp"
+            | "instagram"
+            | "city"
+            | "address"
             | "timezone"
             | "logo_url"
             | "cover_url"
@@ -377,8 +385,16 @@ export interface Database {
           p_slug: string;
           p_segment: BusinessSegment;
           p_timezone?: string;
+          p_whatsapp?: string | null;
+          p_instagram?: string | null;
+          p_city?: string | null;
+          p_address?: string | null;
         };
         Returns: Database["public"]["Tables"]["businesses"]["Row"];
+      };
+      is_slug_available: {
+        Args: { p_slug: string };
+        Returns: boolean;
       };
       get_available_slots: {
         Args: {
