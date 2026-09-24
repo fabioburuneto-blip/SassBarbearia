@@ -8,7 +8,7 @@ import { useAviso } from '@/components/interno/Comuns';
 import s from '@/components/interno/ui.module.css';
 
 export function FormBarbearia({ id, inicial, origem }: { id?: string; inicial?: DadosBarbearia; origem: string }) {
-  const [d, setD] = useState<DadosBarbearia>(inicial ?? { nome: '', slug: '', whatsapp: '', endereco: '', cidade: '', instagram: '' });
+  const [d, setD] = useState<DadosBarbearia>(inicial ?? { nome: '', slug: '', whatsapp: '', endereco: '', cidade: '', instagram: '', dominio_proprio: '' });
   const [slugManual, setSlugManual] = useState(!!inicial);
   const [slugStatus, setSlugStatus] = useState<{ ok: boolean; mensagem: string } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -98,6 +98,20 @@ export function FormBarbearia({ id, inicial, origem }: { id?: string; inicial?: 
           <label htmlFor="b-cid">Cidade</label>
           <input id="b-cid" className={s.entrada} placeholder="São Paulo - SP" value={d.cidade} onChange={(e) => mudar('cidade', e.target.value)} />
         </div>
+      </div>
+      <div className={s.campo}>
+        <label htmlFor="b-dominio">Domínio próprio (opcional)</label>
+        <input
+          id="b-dominio"
+          className={s.entrada}
+          placeholder="barbearia.com.br"
+          value={d.dominio_proprio}
+          onChange={(e) => mudar('dominio_proprio', e.target.value)}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        <span className={s.dica}>Upgrade pago. Depois de preencher, oriente o dono a apontar o DNS e você adiciona o domínio no projeto da Vercel.</span>
       </div>
       {erro && <p className={s.alerta}>{erro}</p>}
       <button className={`${s.botao} ${s.primario}`} disabled={pendente || (slugStatus !== null && !slugStatus.ok)} style={{ justifySelf: 'start' }}>

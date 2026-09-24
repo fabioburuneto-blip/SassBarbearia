@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { exigirSuperadmin } from '@/lib/sessao';
 import { supabaseAdmin, supabaseServidor } from '@/lib/supabase';
 import { validarSlug } from '@/lib/slug';
+import { normalizarDominio, validarDominio } from '@/lib/dominio';
 import { validarTema } from '@/lib/tema-validacao';
 import type { Tema } from '@/lib/barbearia';
 import type { Resultado } from '@/lib/painel-tipos';
@@ -18,6 +19,7 @@ export type DadosBarbearia = {
   endereco: string;
   cidade: string;
   instagram: string;
+  dominio_proprio: string;
 };
 
 function limpar(d: DadosBarbearia) {
@@ -31,6 +33,7 @@ function limpar(d: DadosBarbearia) {
     endereco: d.endereco.trim().slice(0, 160) || null,
     cidade: d.cidade.trim().slice(0, 80) || null,
     instagram: d.instagram.trim().replace(/^@/, '').slice(0, 60) || null,
+    dominio_proprio: normalizarDominio(d.dominio_proprio ?? '') || null,
   };
 }
 
@@ -39,7 +42,13 @@ function validarDados(v: ReturnType<typeof limpar>): string | null {
   const e = validarSlug(v.slug);
   if (e) return `Endereço: ${e}`;
   if (v.whatsapp && (v.whatsapp.length < 10 || v.whatsapp.length > 13)) return 'WhatsApp inválido (DDD + número).';
+  const ed = validarDominio(v.dominio_proprio ?? '');
+  if (ed) return ed;
   return null;
+}
+
+function mensagemDuplicado(error: { message?: string } | null): string {
+  return error?.message?.includes('dominio_proprio') ? 'Esse domínio já está em uso por outra barbearia.' : 'Esse endereço já está em uso.';
 }
 
 /** Disponibilidade do slug em tempo real (ignora a própria barbearia ao editar). */
@@ -63,7 +72,7 @@ export async function criarBarbearia(d: DadosBarbearia): Promise<Resultado> {
   const sb = await supabaseServidor();
   const { data, error } = await sb.from('barbearias').insert(v).select('id').single();
   if (error || !data) {
-    if (error?.code === '23505') return { ok: false, erro: 'Esse endereço já está em uso.' };
+    if (error?.code === '23505') return { ok: false, erro: mensagemDuplicado(error) };
     return { ok: false, erro: 'Não foi possível criar a barbearia.' };
   }
   revalidatePath('/admin');
@@ -79,7 +88,7 @@ export async function salvarDadosBarbearia(id: string, d: DadosBarbearia): Promi
   const sb = await supabaseServidor();
   const { data: antes } = await sb.from('barbearias').select('slug').eq('id', id).single();
   const { error } = await sb.from('barbearias').update(v).eq('id', id);
-  if (error) return { ok: false, erro: error.code === '23505' ? 'Esse endereço já está em uso.' : 'Não foi possível salvar.' };
+  if (error) return { ok: false, erro: error.code === '23505' ? mensagemDuplicado(error) : 'Não foi possível salvar.' };
   revalidatePath('/admin');
   revalidatePath(`/admin/barbearias/${id}`);
   if (antes?.slug) revalidatePath(`/${antes.slug}`);

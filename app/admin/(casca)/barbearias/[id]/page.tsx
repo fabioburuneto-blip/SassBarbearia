@@ -23,7 +23,7 @@ export default async function PaginaBarbearia({
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const sb = await supabaseServidor();
   const [{ data: b }, { data: perfis }] = await Promise.all([
-    sb.from('barbearias').select('id, slug, nome, whatsapp, endereco, cidade, instagram, ativo, tema').eq('id', id).maybeSingle(),
+    sb.from('barbearias').select('id, slug, nome, whatsapp, endereco, cidade, instagram, ativo, tema, dominio_proprio').eq('id', id).maybeSingle(),
     sb.from('perfis').select('id, nome, papel').eq('barbearia_id', id).order('papel').order('nome'),
   ]);
   if (!b) notFound();
@@ -50,6 +50,7 @@ export default async function PaginaBarbearia({
           <h1 className={s.titulo}>{b.nome}</h1>
           <p className={s.sub}>
             /{b.slug} · {b.ativo ? 'ativa' : 'inativa'}
+            {b.dominio_proprio && ` · ${b.dominio_proprio}`}
           </p>
         </div>
         <div className={s.linha}>
@@ -85,6 +86,7 @@ export default async function PaginaBarbearia({
             endereco: b.endereco ?? '',
             cidade: b.cidade ?? '',
             instagram: b.instagram ?? '',
+            dominio_proprio: b.dominio_proprio ?? '',
           }}
         />
       </div>
