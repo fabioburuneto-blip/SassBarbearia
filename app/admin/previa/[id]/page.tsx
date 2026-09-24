@@ -11,12 +11,13 @@ export default async function Previa({ params }: { params: Promise<{ id: string 
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const sb = await supabaseServidor();
-  const [{ data: b }, { data: servicos }, { data: profissionais }] = await Promise.all([
+  const [{ data: b }, { data: servicos }, { data: profissionais }, { data: planos }] = await Promise.all([
     sb.from('barbearias').select('id, slug, nome, whatsapp, endereco, cidade, instagram, horario_funcionamento, tema').eq('id', id).maybeSingle(),
     sb.from('servicos').select('id, nome, descricao, preco, duracao_min').eq('barbearia_id', id).eq('ativo', true).order('ordem').order('nome'),
     sb.from('profissionais').select('id, nome, foto_url').eq('barbearia_id', id).eq('ativo', true).order('ordem').order('nome'),
+    sb.from('planos_clube').select('id, nome, descricao, preco, creditos_mes').eq('barbearia_id', id).eq('ativo', true).order('ordem').order('preco'),
   ]);
   if (!b) notFound();
-  const barbearia = { ...b, servicos: servicos ?? [], profissionais: profissionais ?? [] } as Barbearia;
+  const barbearia = { ...b, servicos: servicos ?? [], profissionais: profissionais ?? [], planos: planos ?? [] } as Barbearia;
   return <PreviaAoVivo inicial={barbearia} />;
 }

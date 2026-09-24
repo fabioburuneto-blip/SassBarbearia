@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { exigirPainel } from '@/lib/sessao';
 import { sair } from '@/app/entrar/acoes';
 import { Casca, type ItemNav } from '@/components/interno/Casca';
-import { IAgenda, IClientes, IEquipe, ILink, IMoeda, ITesoura } from '@/components/interno/Icones';
+import { IAgenda, IClientes, IEquipe, ILink, IMoeda, ISelo, ITesoura } from '@/components/interno/Icones';
 
 export const metadata: Metadata = { title: { template: '%s · Painel', default: 'Painel' }, robots: { index: false } };
 export const viewport: Viewport = { themeColor: '#0b0d10' };
@@ -16,6 +16,7 @@ export default async function LayoutPainel({ children }: { children: React.React
     { href: '/painel/servicos', rotulo: 'Serviços', icone: <ITesoura /> },
     ...(dono ? [{ href: '/painel/profissionais', rotulo: 'Equipe', icone: <IEquipe /> }] : []),
     { href: '/painel/clientes', rotulo: 'Clientes', icone: <IClientes /> },
+    ...(dono ? [{ href: '/painel/clube', rotulo: 'Clube', icone: <ISelo /> }] : []),
     ...(dono ? [{ href: '/painel/financeiro', rotulo: 'Financeiro', icone: <IMoeda /> }] : []),
     { href: '/painel/link', rotulo: 'Meu link', icone: <ILink /> },
   ];

@@ -27,6 +27,16 @@ export type ServicoPainel = {
   ordem: number;
 };
 
+export type PlanoClube = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  preco: number;
+  creditos_mes: number;
+  ativo: boolean;
+  ordem: number;
+};
+
 export type Resultado = { ok: true; mensagem?: string } | { ok: false; erro: string };
 
 export const ROTULO_STATUS: Record<Status, string> = {

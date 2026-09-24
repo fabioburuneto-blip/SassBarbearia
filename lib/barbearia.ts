@@ -34,6 +34,14 @@ export type Profissional = {
   foto_url: string | null;
 };
 
+export type PlanoClube = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  preco: number;
+  creditos_mes: number;
+};
+
 export type DiaFuncionamento = { aberto: boolean; abre: string | null; fecha: string | null };
 
 export type Barbearia = {
@@ -48,6 +56,7 @@ export type Barbearia = {
   tema: Tema;
   servicos: Servico[];
   profissionais: Profissional[];
+  planos: PlanoClube[];
 };
 
 export const SLUG_VALIDO = /^[a-z0-9]+(-[a-z0-9]+)*$/;

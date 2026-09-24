@@ -14,6 +14,8 @@ export type SiteProps = {
   horarios: { dias: string; horario: string }[];
   mostrarEquipe: boolean;
   mostrarGaleria: boolean;
+  mostrarClube: boolean;
+  planoHref: (nome: string) => string | null;
 };
 
 export function montarSite(b: Barbearia): SiteProps {
@@ -30,5 +32,8 @@ export function montarSite(b: Barbearia): SiteProps {
     horarios: horarios(b.horario_funcionamento),
     mostrarEquipe: b.profissionais.length > 1,
     mostrarGaleria: Array.isArray(b.tema.galeria) && b.tema.galeria.length > 0,
+    mostrarClube: b.planos.length > 0,
+    // Ainda sem checkout (Asaas): o interessado fala com a barbearia pelo WhatsApp.
+    planoHref: (nome) => linkWhatsapp(b.whatsapp, `Olá, ${b.nome}! Quero assinar o plano "${nome}".`),
   };
 }

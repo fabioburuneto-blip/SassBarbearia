@@ -1,5 +1,5 @@
 import type { SiteProps } from '@/lib/site';
-import { duracao, iniciais, preco } from '@/lib/formatar';
+import { duracao, iniciais, preco, precoCurto } from '@/lib/formatar';
 import { IconeSeta } from '@/components/site/Icones';
 import s from './minimalista.module.css';
 
@@ -77,7 +77,38 @@ export function Minimalista(p: SiteProps) {
           </section>
         )}
 
-        {/* 4. Sobre */}
+        {/* 4. Clube de assinatura */}
+        {p.mostrarClube && (
+          <section className={s.secao} id="clube" aria-labelledby="t-clube">
+            <Cabecalho id="t-clube" titulo="Clube" contagem={b.planos.length} />
+            <ul className={s.planos}>
+              {b.planos.map((pl) => (
+                <li key={pl.id} className={s.plano}>
+                  <div className={s.planoLinha}>
+                    <h3>{pl.nome}</h3>
+                    <span className={s.preco}>
+                      {precoCurto(pl.preco)}
+                      <span className={s.suave}>/mês</span>
+                    </span>
+                  </div>
+                  <p className={s.servicoInfo}>
+                    {pl.descricao && <span>{pl.descricao}</span>}
+                    <span className={s.duracao}>
+                      {pl.creditos_mes} {pl.creditos_mes === 1 ? 'crédito/mês' : 'créditos/mês'}
+                    </span>
+                  </p>
+                  {p.planoHref(pl.nome) && (
+                    <a className={s.link} href={p.planoHref(pl.nome)!} target="_blank" rel="noopener noreferrer">
+                      Assinar <IconeSeta tamanho={16} />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* 5. Sobre */}
         {p.sobre.length > 0 && (
           <section className={`${s.secao} ${s.secaoSobre}`} id="sobre" aria-labelledby="t-sobre">
             <Cabecalho id="t-sobre" titulo="Sobre" />

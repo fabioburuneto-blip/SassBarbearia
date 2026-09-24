@@ -165,6 +165,35 @@
   white-space: nowrap;
 }
 
+/* Clube de assinatura */
+.planos {
+  padding-top: 16px;
+  display: grid;
+  gap: 20px;
+}
+.plano {
+  padding: 20px;
+  border: 1px solid var(--linha);
+  border-radius: 10px;
+  display: grid;
+  gap: 6px;
+}
+.planoLinha {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.planoLinha h3 {
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+.plano .link {
+  border-bottom: none;
+  padding: 8px 0 0;
+  justify-content: flex-start;
+}
+
 /* Equipe */
 .equipe {
   display: grid;
@@ -341,6 +370,9 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 48px;
+  }
+  .planos {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
   .equipe {
     grid-template-columns: repeat(4, 1fr);

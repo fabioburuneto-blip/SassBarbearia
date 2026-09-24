@@ -294,6 +294,51 @@
   font-size: 1.1rem;
 }
 
+/* Clube de assinatura */
+.planos {
+  display: grid;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.plano {
+  border: 1px solid var(--linha);
+  padding: 36px 28px;
+  text-align: center;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.planoNome {
+  font-family: var(--fonte-titulo);
+  font-weight: 400;
+  font-size: 1.3rem;
+}
+.planoPreco {
+  font-family: var(--fonte-titulo);
+  font-size: clamp(1.8rem, 6vw, 2.2rem);
+  color: var(--destaque);
+}
+.planoPreco span {
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--suave);
+  margin-left: 4px;
+}
+.planoDesc {
+  color: var(--suave);
+  max-width: 40ch;
+}
+.planoCreditos {
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--suave);
+}
+.plano .botaoContorno {
+  margin-top: 10px;
+}
+
 /* Sobre */
 .sobreTexto {
   max-width: 640px;
@@ -474,6 +519,9 @@
   .galeria {
     grid-template-columns: repeat(3, 1fr);
     gap: 14px;
+  }
+  .planos {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
   .contato {
     grid-template-columns: repeat(3, 1fr);

@@ -1,5 +1,5 @@
 import type { SiteProps } from '@/lib/site';
-import { duracao, iniciais, preco } from '@/lib/formatar';
+import { duracao, iniciais, preco, precoCurto } from '@/lib/formatar';
 import { IconeInstagram, IconeLocal, IconeRelogio, IconeSeta, IconeWhatsapp } from '@/components/site/Icones';
 import s from './urbano.module.css';
 
@@ -93,7 +93,34 @@ export function Urbano(p: SiteProps) {
           </section>
         )}
 
-        {/* 4. Sobre */}
+        {/* 4. Clube de assinatura */}
+        {p.mostrarClube && (
+          <section className={s.secao} id="clube" aria-labelledby="t-clube">
+            <Cabecalho id="t-clube" numero={numero()} titulo="Clube" />
+            <ul className={s.planos}>
+              {b.planos.map((pl) => (
+                <li key={pl.id} className={s.plano}>
+                  <h3 className={s.planoNome}>{pl.nome}</h3>
+                  <p className={s.planoPreco}>
+                    {precoCurto(pl.preco)}
+                    <span>/mês</span>
+                  </p>
+                  {pl.descricao && <p className={s.planoDesc}>{pl.descricao}</p>}
+                  <p className={s.etiqueta}>
+                    {pl.creditos_mes} {pl.creditos_mes === 1 ? 'crédito/mês' : 'créditos/mês'}
+                  </p>
+                  {p.planoHref(pl.nome) && (
+                    <a className={s.botaoContorno} href={p.planoHref(pl.nome)!} target="_blank" rel="noopener noreferrer">
+                      Assinar <IconeSeta tamanho={18} />
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* 5. Sobre */}
         {p.sobre.length > 0 && (
           <section className={`${s.secao} ${s.secaoSobre}`} id="sobre" aria-labelledby="t-sobre">
             <Cabecalho id="t-sobre" numero={numero()} titulo="Sobre" />

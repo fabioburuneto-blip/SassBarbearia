@@ -293,6 +293,57 @@
   letter-spacing: 0.04em;
 }
 
+/* Clube de assinatura */
+.planos {
+  display: grid;
+  gap: 22px;
+}
+.plano {
+  padding: 28px 22px;
+  border: 1px solid var(--linha);
+  outline: 1px solid var(--linha);
+  outline-offset: 4px;
+  border-radius: 4px;
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  margin: 4px;
+}
+.planoNome {
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primaria-legivel);
+}
+.planoPreco {
+  font-family: var(--fonte-titulo);
+  font-weight: 700;
+  font-size: 1.8rem;
+  color: var(--destaque);
+}
+.planoPreco span {
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--suave);
+  margin-left: 4px;
+}
+.planoDesc {
+  font-style: italic;
+  color: var(--suave);
+  max-width: 40ch;
+}
+.planoCreditos {
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--suave);
+}
+.plano .botaoSecundario {
+  margin-top: 8px;
+}
+
 /* Sobre com capitular */
 .sobre {
   display: grid;
@@ -438,6 +489,9 @@
   .servicos {
     grid-template-columns: 1fr 1fr;
     gap: 26px 48px;
+  }
+  .planos {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
   .galeria {
     grid-template-columns: repeat(3, 1fr);
